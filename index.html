@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Appli CIS Rieumes</title>
+  
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#e53935">
+  
+  <!-- Chargement de Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root { 
+      --primary: #e53935; --primary-dark: #b71c1c; 
+      --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2c; 
+      --text: #ffffff; --text-sec: #aaaaaa; --border: #333333; 
+    }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text); padding: 15px; margin: 0; -webkit-font-smoothing: antialiased; }
+    .app-container { max-width: 550px; margin: 0 auto; padding-bottom: 40px; }
+    
+    .header { text-align: center; margin-bottom: 24px; margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .logo-container { width: 130px; height: 130px; display: flex; justify-content: center; align-items: center; padding: 2px; }
+    .logo-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .header-text h1 { color: var(--primary); font-size: 26px; margin: 0 0 5px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header-text p { color: var(--text-sec); margin: 0; font-size: 14px; font-weight: 500; }
+    
+    .card { background: var(--surface); border-radius: 16px; padding: 22px; margin-bottom: 24px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
+    .card-title { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .card-title span { color: var(--primary); font-size: 22px; }
+    
+    label { display: block; margin-bottom: 8px; color: #bbbbbb; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select, textarea { width: 100%; padding: 14px 16px; background: var(--surface-light); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 16px; box-sizing: border-box; outline: none; margin-bottom: 16px; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-2 input, .grid-2 select { margin-bottom: 0; }
+    .form-group { margin-bottom: 16px; }
+    
+    .status-toggle { display: flex; background: var(--surface-light); border-radius: 10px; overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border); }
+    .status-btn { flex: 1; padding: 14px; text-align: center; font-weight: 700; font-size: 14px; border: none; background: transparent; color: #777; cursor: pointer; }
+    .status-btn.active-present { background: #4caf50; color: white; }
+    .status-btn.active-absent { background: #ff9800; color: white; }
+
+    .check-list { display: flex; flex-direction: column; gap: 12px; }
+    .check-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #252525; border-radius: 10px; border-left: 5px solid #555; }
+    .check-item.red { border-left-color: #f44336; } .check-item.blue { border-left-color: #2196f3; } .check-item.purple { border-left-color: #9c27b0; } .check-item.pink { border-left-color: #e91e63; }
+    .check-item label { margin: 0; font-size: 15px; color:#fff; text-transform:none; font-weight:500;}
+    .check-item select { width: auto; min-width: 155px; margin: 0; padding: 10px; font-weight: 700; text-align: center; border-radius: 8px; }
+    .help-text { display: block; font-size: 11px; color: #888; font-weight: 400; margin-top: 3px; }
+
+    .btn-submit { width: 100%; padding: 18px; font-size: 16px; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; margin-top:10px; }
+    .btn-logout { background: #333; padding: 12px; font-size: 12px; margin-bottom: 20px; box-shadow: none; border-radius: 8px; }
+    
+    .success-msg { background: #4caf50; color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+    .error-msg { background: rgba(255, 82, 82, 0.1); color: #ff5252; padding: 15px; border-radius: 10px; font-size: 14px; margin-bottom: 15px; text-align:center;}
+    
+    .footer-signature { text-align: center; margin-top: 35px; font-size: 12px; color: #666; font-weight: 500; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    // 1. NOUVELLES CLÉS FIREBASE (Compte cis.rieumes.vehicules)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNjf7clGvsb0zs-X0auokWF4ZSfMzmtbM",
+      authDomain: "cis-rieumes-vehicules.firebaseapp.com",
+      projectId: "cis-rieumes-vehicules",
+      storageBucket: "cis-rieumes-vehicules.firebasestorage.app",
+      messagingSenderId: "917884741454",
+      appId: "1:917884741454:web:2f89ae1b1930acbf0be01f"
+    };
+
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const auth = firebase.auth();
+
+    function App() {
+      const [user, setUser] = React.useState(null);
+      const [authLoading, setAuthLoading] = React.useState(true);
+      const [loginEmail, setLoginEmail] = React.useState('');
+      const [loginPassword, setLoginPassword] = React.useState('');
+      const [loginError, setLoginError] = React.useState('');
+
+      // 2. NOUVELLE URL GOOGLE SCRIPT (Compte cis.rieumes.vehicules)
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxvKa7NU6K-ujK22LyxBTqs3ePdSFG3zMfStlQYsmlywhYgadKr2nRob140Rj_w7_o-0A/exec";
+      
+      // --- ANNUAIRE DES AGENTS ---
+      const AGENT_PROFILES = {
+        "laurent.basque@sdis31.fr": { nom: "Adj Basque Laurent", equipe: "Équipe 3" },
+        "mikael.lausse@sdis31.fr": { nom: "Cpl Lausse Mikaël", equipe: "Équipe 1" },
+        "bruno.gonzales@sdis31.fr": { nom: "Sap Gonzales Bruno", equipe: "Équipe 2" },
+        "frederic.foltran@sdis31.fr": { nom: "Sap Foltran Fréderic", equipe: "Équipe 3" },
+        "davy.lalinec@sdis31.fr": { nom: "Adj Lalinec Davy", equipe: "Équipe 4" }
+      };
+
+      const [loading, setLoading] = React.useState(false);
+      const [success, setSuccess] = React.useState(false);
+      const [form, setForm] = React.useState({
+        date: new Date().toISOString().split('T')[0], nom: '', equipe: 'Équipe 1', vehicule: '', typeControle: 'Hebdomadaire',
+        estAbsent: false, motifAbsence: '', kilometrage: '', heuresMoteur: '', observations: '',
+        huileMoteur: 'Conforme', liquideRefroidissement: 'Conforme', eclairage: 'Conforme', avertisseurs: 'Conforme',
+        adBlue: 'Plein (> 1/2)', carburantGroupe: 'Plein', laveGlace: 'Conforme', directionAssistee: 'Conforme', essuieGlaces: 'Bon état', pressionPneus: 'Conforme',
+        purgeAir: 'Effectuée (Purge OK)', huileGroupe: 'Conforme'
+      });
+
+      const hasAdBlue = ['VSAV 50', 'VSAV 66', 'CCFM 41', 'FPTSR 11'].includes(form.vehicule);
+      const hasPurgeAir = ['CCFM 41', 'FPTSR 11'].includes(form.vehicule);
+      const hasGroupe = ['VID 20', 'CCFM 41', 'FPTSR 11'].includes(form.vehicule);
+
+      React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+          setUser(currentUser);
+          setAuthLoading(false);
+          
+          if (currentUser && currentUser.email) {
+            const emailKey = currentUser.email.toLowerCase();
+            const profile = AGENT_PROFILES[emailKey];
+            if (profile) {
+              setForm(prev => ({ ...prev, nom: profile.nom, equipe: profile.equipe }));
+            }
+          }
+        });
+        return unsubscribe;
+      }, []);
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setLoginError('');
+        auth.signInWithEmailAndPassword(loginEmail, loginPassword)
+          .catch((err) => setLoginError("Accès refusé. Identifiants invalides."));
+      };
+
+      const handleChange = (field, value) => { setForm(prev => ({ ...prev, [field]: value })); };
+
+      const getStatusStyle = (status) => {
+        switch(status) {
+          case 'Conforme': case 'Plein': case 'Plein fait (100%)': case 'Plein (> 1/2)': case 'Effectuée (Purge OK)': case 'Conforme (Pression faite)': case 'Bon état': return { backgroundColor: '#2e7d32', color: '#ffffff' };
+          case 'Complété': case 'Appoint fait': return { backgroundColor: '#1976d2', color: '#ffffff' };
+          case 'À surveiller': case 'À compléter': return { backgroundColor: '#fbc02d', color: '#000000' };
+          case 'Non Conforme': case 'Non effectuée': case 'À remplacer': return { backgroundColor: '#d32f2f', color: '#ffffff' };
+          case 'Non Concerné': return { backgroundColor: '#757575', color: '#ffffff' };
+          default: return { backgroundColor: 'var(--surface)', color: '#ffffff' };
+        }
+      };
+
+      const StatusOptions = () => ( <><option value="Conforme">Conforme</option><option value="Complété">Complété</option><option value="À surveiller">À surveiller</option><option value="Non Conforme">Non Conforme</option></> );
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        let payload = { ...form };
+        if (payload.estAbsent) {
+          payload.kilometrage = ''; payload.heuresMoteur = ''; payload.observations = ''; payload.huileMoteur = ''; payload.liquideRefroidissement = ''; payload.eclairage = ''; payload.avertisseurs = ''; payload.adBlue = ''; payload.carburantGroupe = ''; payload.laveGlace = ''; payload.directionAssistee = ''; payload.essuieGlaces = ''; payload.pressionPneus = ''; payload.purgeAir = ''; payload.huileGroupe = '';
+        } else {
+          payload.motifAbsence = '';
+          if (!hasAdBlue) payload.adBlue = '';
+          if (!hasGroupe) { payload.carburantGroupe = ''; payload.huileGroupe = ''; }
+          if (!hasPurgeAir) payload.purgeAir = '';
+          if (payload.typeControle === 'Hebdomadaire') { payload.laveGlace = ''; payload.directionAssistee = ''; payload.essuieGlaces = ''; payload.pressionPneus = ''; payload.purgeAir = ''; payload.huileGroupe = ''; }
+        }
+
+        fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(data => {
+          setLoading(false); setSuccess(true); setTimeout(() => setSuccess(false), 4000);
+          
+          const profile = (user && user.email) ? AGENT_PROFILES[user.email.toLowerCase()] : null;
+          
+          setForm(prev => ({
+            ...prev, vehicule: '', kilometrage: '', heuresMoteur: '', observations: '', estAbsent: false, 
+            nom: profile ? profile.nom : '', 
+            equipe: profile ? profile.equipe : 'Équipe 1',
+            huileMoteur: 'Conforme', liquideRefroidissement: 'Conforme', eclairage: 'Conforme', avertisseurs: 'Conforme',
+            adBlue: 'Plein (> 1/2)', carburantGroupe: 'Plein', laveGlace: 'Conforme', directionAssistee: 'Conforme', 
+            essuieGlaces: 'Bon état', pressionPneus: 'Conforme', purgeAir: 'Effectuée (Purge OK)', huileGroupe: 'Conforme'
+          }));
+          window.scrollTo(0,0);
+        })
+        .catch(err => { console.error(err); setLoading(false); alert("Erreur de connexion."); });
+      };
+
+      if (authLoading) return <div style={{textAlign: 'center', marginTop: '50px', color: '#888'}}>Vérification de la sécurité...</div>;
+
+      if (!user) {
+        return (
+          <div className="app-container" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '90vh'}}>
+            <div className="header">
+              <div className="logo-container"><img src="./logo.png" alt="Écusson" className="logo-img" /></div>
+              <div className="header-text"><h1>Sapeurs-Pompiers</h1><p>CIS Rieumes</p></div>
+            </div>
+            <div className="card">
+              <h2 className="card-title" style={{justifyContent: 'center', borderBottom: 'none'}}>🔒 Accès Réservé</h2>
+              {loginError && <div className="error-msg">{loginError}</div>}
+              <form onSubmit={handleLogin}>
+                <div className="form-group">
+                  <label>Email Agent</label>
+                  <input type="email" placeholder="prenom.nom@sdis31.fr" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label>Mot de passe</label>
+                  <input type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
+                </div>
+                <button type="submit" className="btn-submit">S'identifier</button>
+              </form>
+            </div>
+            <div className="footer-signature">© Adj Basque Laurent</div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="app-container">
+          <div className="header">
+            <div className="logo-container"><img src="./logo.png" alt="Écusson" className="logo-img" /></div>
+            <div className="header-text"><h1>Sapeurs-Pompiers</h1><p>CIS Rieumes</p></div>
+          </div>
+          
+          <button className="btn-submit btn-logout" onClick={() => auth.signOut()}>
+            Déconnexion ({user.email})
+          </button>
+
+          {success && <div className="success-msg">✅ Données envoyées au tableau !</div>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="card">
+              <h2 className="card-title"><span>📝</span> 1. Identification</h2>
+              <div className="form-group grid-2">
+                <div><label>Date</label><input type="date" value={form.date} onChange={e => handleChange('date', e.target.value)} required /></div>
+                <div><label>Équipe</label><select value={form.equipe} onChange={e => handleChange('equipe', e.target.value)}>
+                    <option>Équipe 1</option><option>Équipe 2</option><option>Équipe 3</option><option>Équipe 4</option><option>Hors Garde</option>
+                </select></div>
+              </div>
+              <div className="form-group">
+                <label>Nom de l'agent</label>
+                <select value={form.nom} onChange={e => handleChange('nom', e.target.value)} required>
+                  <option value="">-- Sélectionner l'agent --</option>
+                  <option value="Adj Basque Laurent">Adj Basque Laurent</option>
+                  <option value="Cpl Lausse Mikaël">Cpl Lausse Mikaël</option>
+                  <option value="Sap Gonzales Bruno">Sap Gonzales Bruno</option>
+                  <option value="Sap Foltran Fréderic">Sap Foltran Fréderic</option>
+                  <option value="Adj Lalinec Davy">Adj Lalinec Davy</option>
+                </select>
+              </div>
+              <div className="form-group grid-2">
+                <div><label>Véhicule</label><select value={form.vehicule} onChange={e => { handleChange('vehicule', e.target.value); handleChange('estAbsent', false); }} required>
+                    <option value="">-- Engin --</option><option>VSAV 50</option><option>VSAV 66</option><option>FPTSR 11</option><option>CCFM 41</option><option>VLTC 22</option><option>VF 75</option><option>VID 20</option>
+                </select></div>
+                <div><label>Contrôle</label><select value={form.typeControle} onChange={e => handleChange('typeControle', e.target.value)}><option>Hebdomadaire</option><option>Mensuel</option></select></div>
+              </div>
+            </div>
+
+            {form.vehicule !== '' && (
+              <div className="card">
+                <h2 className="card-title"><span>📍</span> 2. Statut</h2>
+                <div className="status-toggle">
+                  <button type="button" className={`status-btn ${!form.estAbsent ? 'active-present' : ''}`} onClick={() => handleChange('estAbsent', false)}>Présent</button>
+                  <button type="button" className={`status-btn ${form.estAbsent ? 'active-absent' : ''}`} onClick={() => handleChange('estAbsent', true)}>Absent</button>
+                </div>
+                {form.estAbsent && <div className="form-group"><label>Motif / Localisation</label><input type="text" placeholder="Ex: Ateliers..." value={form.motifAbsence} onChange={e => handleChange('motifAbsence', e.target.value)} required /></div>}
+              </div>
+            )}
+
+            {form.vehicule !== '' && !form.estAbsent && (
+              <>
+                <div className="card">
+                  <h2 className="card-title"><span>⚙️</span> 3. Relevés</h2>
+                  <div className="grid-2">
+                    <div><label>Kilométrage</label><input type="number" placeholder="Km" value={form.kilometrage} onChange={e => handleChange('kilometrage', e.target.value)} required /></div>
+                    <div><label>Heures Moteur</label><input type="number" placeholder="Heures" value={form.heuresMoteur} onChange={e => handleChange('heuresMoteur', e.target.value)} /></div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <h2 className="card-title"><span>🔍</span> Hebdomadaire</h2>
+                  <div className="check-list">
+                    <div className="check-item red"><label>Huile Moteur</label><select value={form.huileMoteur} onChange={e => handleChange('huileMoteur', e.target.value)} style={getStatusStyle(form.huileMoteur)}><StatusOptions /></select></div>
+                    <div className="check-item red"><label>Liq. Refroid.</label><select value={form.liquideRefroidissement} onChange={e => handleChange('liquideRefroidissement', e.target.value)} style={getStatusStyle(form.liquideRefroidissement)}><StatusOptions /></select></div>
+                    <div className="check-item red"><label>Éclairage</label><select value={form.eclairage} onChange={e => handleChange('eclairage', e.target.value)} style={getStatusStyle(form.eclairage)}>
+                      <option value="Conforme">Conforme</option><option value="Non Conforme">Non Conforme</option></select></div>
+                    <div className="check-item red"><label>Avertisseurs</label><select value={form.avertisseurs} onChange={e => handleChange('avertisseurs', e.target.value)} style={getStatusStyle(form.avertisseurs)}>
+                      <option value="Conforme">Conforme</option><option value="Non Conforme">Non Conforme</option></select></div>
+                  </div>
+                </div>
+
+                {(hasAdBlue || hasGroupe) && (
+                  <div className="card">
+                    <h2 className="card-title"><span>🚒</span> Spécifique</h2>
+                    <div className="check-list">
+                      {hasAdBlue && <div className="check-item blue"><label>AdBlue <span className="help-text">(&lt; 1/2)</span></label><select value={form.adBlue} onChange={e => handleChange('adBlue', e.target.value)} style={getStatusStyle(form.adBlue)}><option value="Plein fait (100%)">Plein (100%)</option><option value="Plein (> 1/2)">Plein (&gt; 1/2)</option><option value="À compléter">À compléter</option><option value="Non Conforme">Non Conforme</option></select></div>}
+                      {hasGroupe && <div className="check-item blue"><label>Carburant Groupe</label><select value={form.carburantGroupe} onChange={e => handleChange('carburantGroupe', e.target.value)} style={getStatusStyle(form.carburantGroupe)}><option value="Plein">Plein</option><option value="Plein fait (100%)">Plein fait (100%)</option></select></div>}
+                    </div>
+                  </div>
+                )}
+
+                {form.typeControle === 'Mensuel' && (
+                  <div className="card">
+                    <h2 className="card-title"><span>📅</span> Mensuel</h2>
+                    <div className="check-list">
+                      <div className="check-item purple"><label>Lave-Glace</label><select value={form.laveGlace} onChange={e => handleChange('laveGlace', e.target.value)} style={getStatusStyle(form.laveGlace)}><StatusOptions /></select></div>
+                      <div className="check-item purple"><label>Dir. Assistée</label><select value={form.directionAssistee} onChange={e => handleChange('directionAssistee', e.target.value)} style={getStatusStyle(form.directionAssistee)}><option value="Conforme">Conforme</option><option value="Complété">Complété</option><option value="À surveiller">À surveiller</option><option value="Non Conforme">Non Conforme</option><option value="Non Concerné">Non Concerné</option></select></div>
+                      <div className="check-item purple"><label>Essuie-Glaces</label><select value={form.essuieGlaces} onChange={e => handleChange('essuieGlaces', e.target.value)} style={getStatusStyle(form.essuieGlaces)}><option value="Bon état">Bon état</option><option value="À remplacer">À remplacer</option></select></div>
+                      <div className="check-item purple"><label>Pression Pneus</label><select value={form.pressionPneus} onChange={e => handleChange('pressionPneus', e.target.value)} style={getStatusStyle(form.pressionPneus)}><option value="Conforme">Conforme</option><option value="Conforme (Pression faite)">Conforme (Pression faite)</option><option value="À surveiller">À surveiller</option></select></div>
+                    </div>
+                  </div>
+                )}
+
+                {form.typeControle === 'Mensuel' && (hasPurgeAir || hasGroupe) && (
+                  <div className="card">
+                    <h2 className="card-title"><span>🔧</span> Mensuel Spécifique</h2>
+                    <div className="check-list">
+                      {hasPurgeAir && <div className="check-item pink"><label>Purge Cuve Air</label><select value={form.purgeAir} onChange={e => handleChange('purgeAir', e.target.value)} style={getStatusStyle(form.purgeAir)}><option value="Effectuée (Purge OK)">Effectuée</option><option value="Non effectuée">Non effectuée</option></select></div>}
+                      {hasGroupe && <div className="check-item pink"><label>Huile Groupe</label><select value={form.huileGroupe} onChange={e => handleChange('huileGroupe', e.target.value)} style={getStatusStyle(form.huileGroupe)}><option value="Conforme">Conforme</option><option value="Appoint fait">Appoint fait</option><option value="À surveiller">À surveiller</option><option value="Non Conforme">Non Conforme</option></select></div>}
+                    </div>
+                  </div>
+                )}
+
+                <div className="card">
+                  <h2 className="card-title"><span>💬</span> Observations</h2>
+                  <textarea placeholder="Matériel manquant, anomalies..." value={form.observations} onChange={e => handleChange('observations', e.target.value)}></textarea>
+                </div>
+              </>
+            )}
+            
+            <button type="submit" className="btn-submit" disabled={loading}>{loading ? 'Envoi en cours...' : 'Valider la vérification'}</button>
+          </form>
+          <div className="footer-signature">© Adj Basque Laurent</div>
+        </div>
+      );
+    }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+  </script>
+</body>
+</html>
